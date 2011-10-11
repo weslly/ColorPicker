@@ -11,7 +11,7 @@ Source for the original colorpicker plugin for OSX can be found at https://githu
     cd ~/.config/sublime-text-2/Packages
     git clone git://github.com/weslly/sublime-colorpicker.git ColorPicker
 
-It's important that you check out the repo as ColorPicker as the plugin will look for the color picker script in  `<sublime packages dir>/ColorPicker/colorchooser.py`
+It's important that you check out the repo as ColorPicker as the plugin will look for the color picker script in  `<sublime packages dir>/ColorPicker/lib/colorchooser.py`
 
 ## usage
 
