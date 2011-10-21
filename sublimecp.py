@@ -25,7 +25,7 @@ class ColorPickCommand(sublime_plugin.TextCommand):
                 start_color = "#"+selected
                 
         # get new color from picker
-        args = [path.join(sublime.packages_path(), 'ColorPicker', 'lib', 'colorchooser.py')]
+        args = [path.join(sublime.packages_path(), 'SublimeColorPicker', 'lib', 'colorchooser.py')]
         if start_color:
             args.append(start_color)
 
