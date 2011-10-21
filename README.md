@@ -1,6 +1,6 @@
-# sublime-colorpicker
+# SublimeColorPicker
 
-Color picker plugin for Sublime Text 2 (Linux) using pygtk color selection dialog. 
+Color picker plugin for Sublime Text 2 (Linux only) using pygtk color selection dialog. 
 
 ![Example](http://i.minus.com/ihwLvn8m29GxZ.png "Example")
 
@@ -9,9 +9,9 @@ Source for the original colorpicker plugin for OSX can be found at https://githu
 ## installation
 
     cd ~/.config/sublime-text-2/Packages
-    git clone git://github.com/weslly/sublime-colorpicker.git ColorPicker
+    git clone git://github.com/weslly/SublimeColorPicker.git
 
-It's important that you check out the repo as ColorPicker as the plugin will look for the color picker script in  `<sublime packages dir>/ColorPicker/lib/colorchooser.py`
+It's important that you check out the repo as SublimeColorPicker as the plugin will look for the color picker script in  `<sublime packages dir>/SublimeColorPicker/lib/colorchooser.py`
 
 ## usage
 
