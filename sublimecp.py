@@ -17,6 +17,7 @@ class ColorPickCommand(sublime_plugin.TextCommand):
         view = self.view
         sel = view.sel()
         start_color = None
+        start_color_osx = None
 
         # get the currently selected color - if any
         if len(sel) > 0:
