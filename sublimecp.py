@@ -1,7 +1,8 @@
 import sublime
 import sublime_plugin
-from os import path
 import subprocess
+import os
+import sys
 
 def is_valid_hex_color(s):
     if len(s) not in (3, 6):
@@ -23,11 +24,20 @@ class ColorPickCommand(sublime_plugin.TextCommand):
             if selected.startswith('#'): selected = selected[1:]
             if is_valid_hex_color(selected):
                 start_color = "#"+selected
+                start_color_osx = selected
                 
-        # get new color from picker
-        args = [path.join(sublime.packages_path(), 'SublimeColorPicker', 'lib', 'colorchooser.py')]
-        if start_color:
-            args.append(start_color)
+
+        if os.name == 'nt':
+            args = []
+        elif sys.platform == 'darwin':
+            args = [os.path.join(sublime.packages_path(), 'ColorPicker', 'lib', 'osx_colorpicker')]
+            if start_color_osx:
+                args.append('-startColor')
+                args.append(start_color_osx)
+        else:
+            args = [os.path.join(sublime.packages_path(), 'ColorPicker', 'lib', 'linux_colorpicker.py')]
+            if start_color:
+                args.append(start_color)
 
         proc = subprocess.Popen(args, stdout=subprocess.PIPE)
         color = proc.communicate()[0].strip()

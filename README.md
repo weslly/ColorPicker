@@ -1,18 +1,27 @@
-# SublimeColorPicker
+**\*\*Linux and OSX only\*\***
 
-Color picker plugin for Sublime Text 2 (Linux only) using pygtk color selection dialog. 
+![Linux](http://i.minus.com/ihwLvn8m29GxZ.png "Linux")
 
-![Example](http://i.minus.com/ihwLvn8m29GxZ.png "Example")
+![Mac OSX](http://i.minus.com/i5KI6SBAfs7Qk.png "Mac OSX")
+
 
 Source for the original colorpicker plugin for OSX can be found at https://github.com/jnordberg/sublime-colorpick/
 
 ## installation
 
-    cd ~/.config/sublime-text-2/Packages
-    git clone git://github.com/weslly/SublimeColorPicker.git
+Go to your Packages subdirectory under ST2's data directory:
 
-It's important that you check out the repo as SublimeColorPicker as the plugin will look for the color picker script in  `<sublime packages dir>/SublimeColorPicker/lib/colorchooser.py`
+- OS X: ~/Library/Application Support/Sublime Text 2
+- Linux: ~/.config/sublime-text-2
+
+Then clone this repository:
+
+    git clone git://github.com/SublimeText/ColorPicker.git
 
 ## usage
 
+####Linux
 `ctrl+shift+c` to insert or change a selected color
+
+####OSX
+`super+shift+c` to insert or change a selected color
