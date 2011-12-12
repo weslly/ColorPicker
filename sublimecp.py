@@ -42,7 +42,12 @@ class ColorPickCommand(sublime_plugin.TextCommand):
                 args.append(start_color_osx)
 
         else:
-            args = [os.path.join(sublime.packages_path(), 'ColorPicker', 'lib', 'linux_colorpicker.py')]
+            location = [os.path.join(sublime.packages_path(), 'ColorPicker', 'lib', 'linux_colorpicker.py')]
+            args = [location]
+
+            if not os.access(location, os.X_OK):
+                os.chmod(location, 0755)
+            
             if start_color:
                 args.append(start_color)
 
