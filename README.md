@@ -9,14 +9,7 @@ Source for the original colorpicker plugin for OSX can be found at https://githu
 
 ## installation
 
-Go to your Packages subdirectory under ST2's data directory:
-
-- OS X: ~/Library/Application Support/Sublime Text 2/Packages
-- Linux: ~/.config/sublime-text-2/Packages
-
-Then clone this repository:
-
-    git clone git://github.com/SublimeText/ColorPicker.git
+Install this repository via "Package Control" plugin http://wbond.net/sublime_packages/package_control
 
 ## usage
 
