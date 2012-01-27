@@ -50,6 +50,7 @@ if sublime.platform() == 'windows':
 
 class ColorPickCommand(sublime_plugin.TextCommand):
     def run(self, edit):
+        paste = None
         sel = self.view.sel()
         start_color = None
         start_color_osx = None
@@ -66,6 +67,14 @@ class ColorPickCommand(sublime_plugin.TextCommand):
                 
 
         if sublime.platform() == 'windows':
+
+            s = sublime.load_settings("ColorPicker.sublime-settings")
+            custom_colors = s.get("custom_colors", ['0']*16)
+
+            if len(custom_colors) < 16:
+                custom_colors = ['0']*16
+                s.set('custom_colors', custom_colors)
+                
             cc = CHOOSECOLOR()
             ctypes.memset(ctypes.byref(cc), 0, ctypes.sizeof(cc))
             cc.lStructSize = ctypes.sizeof(cc)
@@ -76,6 +85,8 @@ class ColorPickCommand(sublime_plugin.TextCommand):
 
             if ChooseColorW(ctypes.byref(cc)):
                 color = self.__bgr_to_hexstr(cc.rgbResult)
+            else:
+                color = None
 
 
         elif sublime.platform() == 'osx':
