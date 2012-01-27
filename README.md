@@ -21,5 +21,5 @@ To insert or change a selected color, use:
 
 ## Acknowledgements
 
-[Original colorpick plugin for OS X by jnordberg](https://github.com/jnordberg/sublime-colorpick/)
-[Original colorpick plugin for Windows by animehunter](https://github.com/animehunter/SublimeColorPickerWindowsOnly)
+- [Original colorpick plugin for OS X by jnordberg](https://github.com/jnordberg/sublime-colorpick/)
+- [Original colorpick plugin for Windows by animehunter](https://github.com/animehunter/SublimeColorPickerWindowsOnly)
