@@ -199,6 +199,9 @@ class ColorPickCommand(sublime_plugin.TextCommand):
         "yellow": "FFFF00",
         "yellowgreen": "9ACD32"
     }
+    isRGB = False
+    isRGBA = False
+    opacity = 1
 
     def run(self, edit):
         paste = None
@@ -210,7 +213,15 @@ class ColorPickCommand(sublime_plugin.TextCommand):
         # get the currently selected color - if any
         if len(sel) > 0:
             selected = self.view.substr(self.view.word(sel[0])).strip()
-            if selected.startswith('#'): selected = selected[1:]
+            if selected.startswith('#'):
+                selected = selected[1:]
+            elif selected.startswith('rgba'):
+                self.isRGBA = True
+                selected = self.__rgba_to_hex(selected[4:])
+            elif selected.startswith('rgb'):
+                print selected[3:]
+                self.isRGB = True
+                selected = self.__rgba_to_hex(selected[3:])
 
             svg_color_hex = self.SVGColors.get(selected, None)
             if svg_color_hex != None:
@@ -220,7 +231,6 @@ class ColorPickCommand(sublime_plugin.TextCommand):
                 start_color = "#" + selected
                 start_color_osx = selected
                 start_color_win = self.__hexstr_to_bgr(selected)
-                
 
         if sublime.platform() == 'windows':
 
@@ -230,7 +240,7 @@ class ColorPickCommand(sublime_plugin.TextCommand):
             if len(custom_colors) < 16:
                 custom_colors = ['0']*16
                 s.set('custom_colors', custom_colors)
-                
+
             cc = CHOOSECOLOR()
             ctypes.memset(ctypes.byref(cc), 0, ctypes.sizeof(cc))
             cc.lStructSize = ctypes.sizeof(cc)
@@ -244,14 +254,13 @@ class ColorPickCommand(sublime_plugin.TextCommand):
             else:
                 color = None
 
-
         elif sublime.platform() == 'osx':
             location = os.path.join(sublime.packages_path(), 'ColorPicker', 'lib', 'osx_colorpicker')
             args = [location]
 
             if not os.access(location, os.X_OK):
                 os.chmod(location, 0755)
-                
+
             if start_color_osx:
                 args.append('-startColor')
                 args.append(start_color_osx)
@@ -262,16 +271,20 @@ class ColorPickCommand(sublime_plugin.TextCommand):
 
             if not os.access(location, os.X_OK):
                 os.chmod(location, 0755)
-            
+
             if start_color:
                 args.append(start_color)
-
 
         if sublime.platform() == 'osx' or sublime.platform() == 'linux':
             proc = subprocess.Popen(args, stdout=subprocess.PIPE)
             color = proc.communicate()[0].strip()
 
         if color:
+            # Check wether the color is a rgb or rgba color.
+            if self.isRGB or self.isRGBA:
+                color = self.__hex_to_rgba(color)
+            else:
+                color = '#' + color
             # replace all regions with color
             for region in sel:
                 word = self.view.word(region)
@@ -281,11 +294,10 @@ class ColorPickCommand(sublime_plugin.TextCommand):
                     if self.view.substr(word.a - 1) == '#':
                         word = sublime.Region(word.a - 1, word.b)
                     # replace
-                    self.view.replace(edit, word, '#' + color)
+                    self.view.replace(edit, word, color)
                 # otherwise just replace the selected region
                 else:
-                    self.view.replace(edit, region, '#' + color)
-                    
+                    self.view.replace(edit, region, color)
 
     def __get_pixel(self):
         hdc = GetDC(0)
@@ -330,3 +342,42 @@ class ColorPickCommand(sublime_plugin.TextCommand):
         g = int(hexstr[2:4], 16)
         b = int(hexstr[4:6], 16)
         return (b << 16)| (g << 8) | r
+
+    def __rgba_to_hex(self, pColor):
+        result = ''
+        tmp = pColor.strip()
+        vals = tmp.split(',')
+
+        if len(vals) == 4:
+            end = vals[3].find(')')
+            if end == -1:
+                self.opacity = vals[3].strip()
+            else:
+                self.opacity = vals[3][:end].strip()
+
+        for val in vals[:3]:
+            print val + ' | '
+            if val[0] == '(':
+                val = val[1:].strip()
+
+            if val.find(')') != -1:
+                val = val[0:val.find(')')]
+                
+            result += ('0' + hex(int(val.strip()))[2:])[-2:]
+
+        return result
+
+    def __hex_to_rgba(self, pColor):
+        print 'color: ' + pColor
+        result = ''
+
+        r = str(int(pColor[0:2], 16))
+        g = str(int(pColor[2:4], 16))
+        b = str(int(pColor[4:6], 16))
+
+        if self.isRGB:
+            result = 'rgb(' + r + ', ' + g + ', ' + b + ')'
+        elif self.isRGBA:
+            result = 'rgba(' + r + ', ' + g + ', ' + b + ', ' + self.opacity + ')'
+
+        return result
