@@ -197,10 +197,12 @@ class ColorPickCommand(sublime_plugin.TextCommand):
         "white": "FFFFFF",
         "whitesmoke": "F5F5F5",
         "yellow": "FFFF00",
+        "yellowgreen": "rgba(78, 0, 255, 0.8)",
         "yellowgreen": "9ACD32"
     }
     isRGB = False
     isRGBA = False
+    replaceLine = False
     opacity = 1
 
     def run(self, edit):
@@ -215,13 +217,18 @@ class ColorPickCommand(sublime_plugin.TextCommand):
             selected = self.view.substr(self.view.word(sel[0])).strip()
             if selected.startswith('#'):
                 selected = selected[1:]
-            elif selected.startswith('rgba'):
-                self.isRGBA = True
-                selected = self.__rgba_to_hex(selected[4:])
-            elif selected.startswith('rgb'):
-                print selected[3:]
-                self.isRGB = True
-                selected = self.__rgba_to_hex(selected[3:])
+            else:
+                if not selected.startswith('rgb'):
+                    self.replaceLine = True
+                    selected = self.__rgb_from_row(self.view.substr(self.view.line(sel[0])))
+
+                if selected.startswith('rgba'):
+                    self.isRGBA = True
+                    selected = self.__rgba_to_hex(selected[4:])
+                elif selected.startswith('rgb'):
+                    print selected[3:]
+                    self.isRGB = True
+                    selected = self.__rgba_to_hex(selected[3:])
 
             svg_color_hex = self.SVGColors.get(selected, None)
             if svg_color_hex != None:
@@ -286,18 +293,25 @@ class ColorPickCommand(sublime_plugin.TextCommand):
             else:
                 color = '#' + color
             # replace all regions with color
-            for region in sel:
-                word = self.view.word(region)
-                # if the selected word is a valid color, replace it
-                if self.__is_valid_hex_color(self.view.substr(word)):
-                    # include '#' if present
-                    if self.view.substr(word.a - 1) == '#':
-                        word = sublime.Region(word.a - 1, word.b)
-                    # replace
-                    self.view.replace(edit, word, color)
-                # otherwise just replace the selected region
-                else:
-                    self.view.replace(edit, region, color)
+            if not self.replaceLine:
+                for region in sel:
+                    word = self.view.word(region)
+                    # if the selected word is a valid color, replace it
+                    if self.__is_valid_hex_color(self.view.substr(word)):
+                        # include '#' if present
+                        if self.view.substr(word.a - 1) == '#':
+                            word = sublime.Region(word.a - 1, word.b)
+                        # replace
+                        self.view.replace(edit, word, color)
+                    # otherwise just replace the selected region
+                    else:
+                        self.view.replace(edit, region, color)
+            else:
+                row = self.__create_new_line(self.view.substr(self.view.line(sel[0])), color)
+                begin = self.view.line(sel[0]).begin()
+                end = self.view.line(sel[0]).end()
+                region = sublime.Region(begin, end)
+                self.view.replace(edit, region, row)
 
     def __get_pixel(self):
         hdc = GetDC(0)
@@ -362,7 +376,7 @@ class ColorPickCommand(sublime_plugin.TextCommand):
 
             if val.find(')') != -1:
                 val = val[0:val.find(')')]
-                
+
             result += ('0' + hex(int(val.strip()))[2:])[-2:]
 
         return result
@@ -381,3 +395,18 @@ class ColorPickCommand(sublime_plugin.TextCommand):
             result = 'rgba(' + r + ', ' + g + ', ' + b + ', ' + self.opacity + ')'
 
         return result
+
+    def __rgb_from_row(self, row):
+        begin = row.find('rgb')
+        if begin == -1:
+            return 'empty'
+
+        end = row.find(')', begin) + 1
+
+        return row[begin:end]
+
+    def __create_new_line(self, row, color):
+        begin = row.find('rgb')
+        end = row.find(')', begin) + 1
+
+        return row[0:begin] + color + row[end:len(row)]
