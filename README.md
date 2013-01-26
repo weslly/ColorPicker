@@ -16,7 +16,7 @@ To insert or change a selected color, use:
 
 - Linux: `ctrl+shift+c`
 - Windows: `ctrl+shift+c`
-- OS X: `super+shift+c`
+- OS X: `cmd+shift+c`
 
 
 ## Acknowledgements
