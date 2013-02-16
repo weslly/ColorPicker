@@ -255,7 +255,7 @@ class ColorPickCommand(sublime_plugin.TextCommand):
             args = [location]
 
             if not os.access(location, os.X_OK):
-                os.chmod(location, 755)
+                os.chmod(location, 0o755)
 
             if start_color_osx:
                 args.append('-startColor')
@@ -266,7 +266,7 @@ class ColorPickCommand(sublime_plugin.TextCommand):
             args = [location]
 
             if not os.access(location, os.X_OK):
-                os.chmod(location, 755)
+                os.chmod(location, 0o755)
 
             if start_color:
                 args.append(start_color)
@@ -278,6 +278,7 @@ class ColorPickCommand(sublime_plugin.TextCommand):
 
         if color:
             color = color.decode('utf-8')
+
             # replace all regions with color
             for region in sel:
                 word = self.view.word(region)
@@ -321,7 +322,7 @@ class ColorPickCommand(sublime_plugin.TextCommand):
         except ValueError:
             return False
 
-    def __bgr_to_hexstr(self, bgr, byte_table=list(map(lambda b: '{0:02X}'.format(b), range(256)))):
+    def __bgr_to_hexstr(self, bgr, byte_table=list(['{0:02X}'.format(b) for b in range(256)])):
         # 0x00BBGGRR
         b = byte_table[(bgr >> 16) & 0xff]
         g = byte_table[(bgr >>  8) & 0xff]
