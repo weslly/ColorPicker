@@ -253,13 +253,13 @@ class ColorPickCommand(sublime_plugin.TextCommand):
 
 
         elif sublime.platform() == 'osx':
-            args = [binpath]
+            args = [os.path.join(sublime.packages_path(), usrbin, binname)]
             if start_color_osx:
                 args.append('-startColor')
                 args.append(start_color_osx)
 
         else:
-            args = [binpath]
+            args = [os.path.join(sublime.packages_path(), usrbin, binname)]
             if start_color:
                 args.append(start_color)
 
@@ -336,11 +336,11 @@ if sublime.platform() == 'osx':
 else:
     binname = 'linux_colorpicker.py'
 
-bindir = os.path.join(sublime.packages_path(), 'User', 'ColorPicker', 'bin')
-binpath = os.path.join(bindir, binname)
-
+usrbin = os.path.join('User', 'ColorPicker', 'bin')
 
 def update_binary():
+    bindir = os.path.join(sublime.packages_path(), usrbin)
+    binpath = os.path.join(bindir, binname)
     pkgpath = os.path.join(sublime.installed_packages_path(), 'ColorPicker.sublime-package')
     respath = 'Packages/ColorPicker/lib/' + binname
     libdir = os.path.join(sublime.packages_path(), 'ColorPicker', 'lib')
