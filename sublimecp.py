@@ -239,7 +239,15 @@ class ColorPickCommand(sublime_plugin.TextCommand):
             cc = CHOOSECOLOR()
             ctypes.memset(ctypes.byref(cc), 0, ctypes.sizeof(cc))
             cc.lStructSize = ctypes.sizeof(cc)
-            cc.hwndOwner = self.view.window().hwnd()
+
+            if sublime_version == 2:
+                cc.hwndOwner = self.view.window().hwnd()
+            else:
+                # Temporary fix for Sublime Text 3 - For some reason the hwnd crashes it
+                # Of course, clicking out of the colour picker and into Sublime will make
+                # Sublime not respond, but as soon as you exit the colour picker it's ok
+                cc.hwndOwner = None
+
             cc.Flags = CC_SOLIDCOLOR | CC_FULLOPEN | CC_RGBINIT
             cc.rgbResult = c_uint32(start_color_win) if not paste and start_color_win else self.__get_pixel()
             cc.lpCustColors = self.__to_custom_color_array(custom_colors)
@@ -277,7 +285,8 @@ class ColorPickCommand(sublime_plugin.TextCommand):
             color = proc.communicate()[0].strip()
 
         if color:
-            color = color.decode('utf-8')
+            if sublime_version == 2:
+                color = color.decode('utf-8')
 
             # replace all regions with color
             for region in sel:
