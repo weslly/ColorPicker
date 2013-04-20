@@ -277,7 +277,7 @@ class ColorPickCommand(sublime_plugin.TextCommand):
             color = proc.communicate()[0].strip()
 
         if color:
-            if sublime_version == 2:
+            if sublime.platform() != 'windows' or sublime_version == 2:
                 color = color.decode('utf-8')
 
             # replace all regions with color
