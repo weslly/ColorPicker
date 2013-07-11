@@ -10,6 +10,9 @@
 ## Installation
 Install this repository via [Package Control](http://wbond.net/sublime_packages/package_control)
 
+###Linux
+Python3 with `PyGObject` should be installed.
+See [PyGObject Installation Documentation](http://python-gtk-3-tutorial.readthedocs.org/en/latest/install.html) for further details.
 
 ## Usage
 To insert or change a selected color, use:

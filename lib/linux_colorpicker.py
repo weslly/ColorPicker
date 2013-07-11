@@ -1,26 +1,24 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-import pygtk
-pygtk.require('2.0')
-import gtk
+from gi.repository import Gtk
 import sys
 
-color_sel = gtk.ColorSelectionDialog("Sublime Color Picker")
+color_sel = Gtk.ColorSelectionDialog("Sublime Color Picker")
 
 if len(sys.argv) > 1:
-    if gtk.gdk.Color(sys.argv[1]):
-        color_sel.colorsel.set_current_color(gtk.gdk.Color(sys.argv[1]))
+    if Gtk.gdk.Color(sys.argv[1]):
+        color_sel.colorsel.set_current_color(Gtk.gdk.Color(sys.argv[1]))
 
-if color_sel.run() == gtk.RESPONSE_OK:
-    color = color_sel.colorsel.get_current_color()
+if color_sel.run() == Gtk.ResponseType.OK:
+    color = color_sel.get_color_selection().get_current_color()
     #Convert to 8bit channels
     red = color.red / 256
     green = color.green / 256
     blue = color.blue / 256
     #Convert to hexa strings
-    red = str(hex(red))[2:]
-    green = str(hex(green))[2:]
-    blue = str(hex(blue))[2:]
+    red = str(hex(int(red)))[2:]
+    green = str(hex(int(green)))[2:]
+    blue = str(hex(int(blue)))[2:]
     #Format
     if len(red) == 1:
         red = "0%s" % red
@@ -30,6 +28,6 @@ if color_sel.run() == gtk.RESPONSE_OK:
         blue = "0%s" % blue
     
     finalcolor = red+green+blue
-    print finalcolor.upper()
+    print(finalcolor.upper())
 
 color_sel.destroy()
