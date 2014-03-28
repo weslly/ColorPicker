@@ -12,33 +12,7 @@ if not sublime.version() or int(sublime.version()) > 3000:
 
 if sublime.platform() == 'windows':
     import ctypes
-
-def prepare_windows():
-    global ChooseColorWCallbackHookProc, CHOOSECOLOR, POINT, CustomColorArray
-    global CC_SOLIDCOLOR, CC_RGBINIT, CC_FULLOPEN, CC_ENABLEHOOK
-    global ChooseColorW, GetDC, ReleaseDC, GetCursorPos, GetPixel, SetSublimeTextWindow
-    import os.path
-    import platform
-
-    plugin_path = os.path.join(sublime.packages_path(), "ColorPicker")
-    if platform.architecture()[0] == '64bit':
-        dll_path = os.path.join(plugin_path, "ColorPickerHelperDLL_x64.dll")
-    else:
-        dll_path = os.path.join(plugin_path, "ColorPickerHelperDLL_x86.dll")
-
-    from ctypes import c_int32, c_uint32, c_void_p, c_wchar_p, pointer, POINTER, c_long
-    helperdll = ctypes.windll.LoadLibrary(dll_path)
-    try:
-        # Set the hook procedure which will enable the Sublime Text window
-        # and give it keyboard focus.
-        ChooseColorWCallbackHookProc = c_void_p.in_dll(helperdll, "ChooseColorWCallbackHookProc")
-
-        # Function to pass the current active (at the time of Color Picker invocation)
-        # window's handle the to the DLL.
-        SetSublimeTextWindow = helperdll.SetSublimeTextWindow
-        SetSublimeTextWindow.argtypes = [c_void_p]
-    except:
-        ChooseColorWCallbackHookProc = None
+    from ctypes import c_int32, c_uint32, c_void_p, c_wchar_p, pointer, POINTER
 
     class CHOOSECOLOR(ctypes.Structure):
          _fields_ = [('lStructSize', c_uint32),
@@ -59,7 +33,6 @@ def prepare_windows():
     CC_SOLIDCOLOR = 0x80
     CC_RGBINIT = 0x01
     CC_FULLOPEN = 0x02
-    CC_ENABLEHOOK = 0x10
 
     ChooseColorW = ctypes.windll.Comdlg32.ChooseColorW
     ChooseColorW.argtypes = [POINTER(CHOOSECOLOR)]
@@ -80,8 +53,6 @@ def prepare_windows():
     GetPixel = ctypes.windll.Gdi32.GetPixel
     GetPixel.argtypes = [c_void_p, c_int32, c_int32] # hdc, x, y
     GetPixel.restype = c_uint32 # colorref
-
-
 
 
 class ColorPickCommand(sublime_plugin.TextCommand):
@@ -236,35 +207,12 @@ class ColorPickCommand(sublime_plugin.TextCommand):
         "yellowgreen": "9ACD32"
     }
 
-    def color_action(self, edit, color):
-        if color:
-            if sublime.platform() != 'windows' or sublime_version == 2:
-                color = color.decode('utf-8')
-
-            sel = self.view.sel()
-            for region in sel:
-                word = self.view.word(region)
-                if self.__is_valid_hex_color(self.view.substr(word)):
-                    if self.view.substr(word.a - 1) == '#':
-                        word = sublime.Region(word.a - 1, word.b)
-                    self.view.replace(edit, word, '#' + color)
-                else:
-                    self.view.replace(edit, region, '#' + color)
-
-    def run(self, edit, color=None):
-        if color:
-            if type(color) == list:
-                color = bytes(color)
-            self.color_action(edit, color)
-            return
-
-        cc = None
+    def run(self, edit):
         paste = None
         sel = self.view.sel()
         start_color = None
         start_color_osx = None
         start_color_win = None
-
 
         # get the currently selected color - if any
         if len(sel) > 0:
@@ -293,19 +241,23 @@ class ColorPickCommand(sublime_plugin.TextCommand):
             cc = CHOOSECOLOR()
             ctypes.memset(ctypes.byref(cc), 0, ctypes.sizeof(cc))
             cc.lStructSize = ctypes.sizeof(cc)
-            cc.hwndOwner = self.view.window().hwnd()
 
-            if ChooseColorWCallbackHookProc is None:
-                cc.Flags = CC_SOLIDCOLOR | CC_FULLOPEN | CC_RGBINIT
+            if sublime_version == 2:
+                cc.hwndOwner = self.view.window().hwnd()
             else:
-                # Give the current window handle to the DLL
-                SetSublimeTextWindow(self.view.window().hwnd())
-                cc.lpfnHook = ChooseColorWCallbackHookProc
-                cc.Flags = CC_SOLIDCOLOR | CC_FULLOPEN | CC_RGBINIT | CC_ENABLEHOOK
+                # Temporary fix for Sublime Text 3 - For some reason the hwnd crashes it
+                # Of course, clicking out of the colour picker and into Sublime will make
+                # Sublime not respond, but as soon as you exit the colour picker it's ok
+                cc.hwndOwner = None
 
+            cc.Flags = CC_SOLIDCOLOR | CC_FULLOPEN | CC_RGBINIT
             cc.rgbResult = c_uint32(start_color_win) if not paste and start_color_win else self.__get_pixel()
             cc.lpCustColors = self.__to_custom_color_array(custom_colors)
 
+            if ChooseColorW(ctypes.byref(cc)):
+                color = self.__bgr_to_hexstr(cc.rgbResult)
+            else:
+                color = None
 
 
         elif sublime.platform() == 'osx':
@@ -321,32 +273,26 @@ class ColorPickCommand(sublime_plugin.TextCommand):
 
 
         if sublime.platform() == 'osx' or sublime.platform() == 'linux':
-            def get_color(inst, cc):
-                proc = subprocess.Popen(args, stdout=subprocess.PIPE)
-                color = proc.communicate()[0].strip()
-                return color
-        else:
-            def get_color(inst, cc):
-                if ChooseColorW(ctypes.byref(cc)):
-                    return inst.__bgr_to_hexstr(cc.rgbResult)
+            proc = subprocess.Popen(args, stdout=subprocess.PIPE)
+            color = proc.communicate()[0].strip()
+
+        if color:
+            if sublime.platform() != 'windows' or sublime_version == 2:
+                color = color.decode('utf-8')
+
+            # replace all regions with color
+            for region in sel:
+                word = self.view.word(region)
+                # if the selected word is a valid color, replace it
+                if self.__is_valid_hex_color(self.view.substr(word)):
+                    # include '#' if present
+                    if self.view.substr(word.a - 1) == '#':
+                        word = sublime.Region(word.a - 1, word.b)
+                    # replace
+                    self.view.replace(edit, word, '#' + color)
+                # otherwise just replace the selected region
                 else:
-                    return None
-
-        def work(views, view_id, inst, cc):
-            color = get_color(inst, cc)
-            if color:
-                views = list(filter(lambda v: v.id() == view_id, views))
-                if len(views) > 0:
-                    views[0].run_command('color_pick', {'color': color})
-
-        if sublime_version == 2:
-            self.color_action(edit, get_color(self, cc))
-        else:
-            targs = (self.view.window().views(), self.view.id(), self, cc)
-
-            t = threading.Thread(target=work, args=targs)
-            t.daemon = True
-            t.start()
+                    self.view.replace(edit, region, '#' + color)
 
 
     def __get_pixel(self):
@@ -439,8 +385,6 @@ def update_binary():
 
 
 def plugin_loaded():
-    if sublime.platform() == 'windows':
-        prepare_windows()
     if sublime.platform() == 'osx' or sublime.platform() == 'linux':
         set_timeout_async(update_binary)
 
