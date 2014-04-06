@@ -165,24 +165,7 @@ class ColorPickCommand(sublime_plugin.TextCommand):
 
     def run(self, edit):
         paste = None
-        sel = self.view.sel()
-        start_color = None
-        start_color_osx = None
-        start_color_win = None
-
-        # get the currently selected color - if any
-        if len(sel) > 0:
-            selected = self.view.substr(self.view.word(sel[0])).strip()
-            if selected.startswith('#'): selected = selected[1:]
-
-            svg_color_hex = self.SVGColors.get(selected, None)
-            if svg_color_hex != None:
-                selected = svg_color_hex
-
-            if self.__is_valid_hex_color(selected):
-                start_color = "#" + selected
-                start_color_osx = selected
-                start_color_win = self.__hexstr_to_bgr(selected)
+        color = self.get_selected(edit)
 
 
         if sublime.platform() == 'windows':
@@ -222,6 +205,23 @@ class ColorPickCommand(sublime_plugin.TextCommand):
                 # otherwise just replace the selected region
                 else:
                     self.view.replace(edit, region, '#' + color)
+
+
+    def get_selected(self, edit):
+        """ return currently selected color in 'RRGGBB' format """
+
+        # get the currently selected color - if any
+        sel = self.view.sel()
+        if len(sel) > 0:
+            selected = self.view.substr(self.view.word(sel[0])).strip()
+            if selected.startswith('#'): selected = selected[1:]
+
+            svg_color_hex = self.SVGColors.get(selected, None)
+            if svg_color_hex != None:
+                selected = svg_color_hex
+
+            if self.__is_valid_hex_color(selected):
+                return selected
 
 
     def __get_pixel(self):
