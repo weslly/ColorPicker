@@ -342,6 +342,8 @@ class ColorPickCommand(sublime_plugin.TextCommand):
 
 if sublime.platform() == 'osx':
     binname = 'osx_colorpicker'
+elif sublime.platform() == 'windows':
+    binname = 'ColorPicker.dll'
 else:
     binname = 'linux_colorpicker.py'
 
@@ -385,8 +387,7 @@ def update_binary():
 
 
 def plugin_loaded():
-    if sublime.platform() == 'osx' or sublime.platform() == 'linux':
-        set_timeout_async(update_binary)
+    set_timeout_async(update_binary)
 
 
 if sublime_version == 3:
