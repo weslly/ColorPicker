@@ -269,12 +269,12 @@ class ColorPickCommand(sublime_plugin.TextCommand):
         except ValueError:
             return False
 
-    def __rgb_to_hexstr(self, rgb, byte_table=list(['{0:02X}'.format(b) for b in range(256)])):
+    def __rgb_to_hexstr(self, rgb):
         # 0x00RRGGBB
-        r = byte_table[(rgb >> 16) & 0xff]
-        g = byte_table[(rgb >>  8) & 0xff]
-        b = byte_table[(rgb      ) & 0xff]
-        return (r+g+b)
+        r = (rgb >> 16) & 0xff
+        g = (rgb >>  8) & 0xff
+        b = (rgb      ) & 0xff
+        return "%02x%02x%02x" % (r,g,b)
 
     def __hexstr_to_rgb(self, hexstr):
         if hexstr[0] == '#':
