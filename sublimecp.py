@@ -244,12 +244,12 @@ class ColorPickCommand(sublime_plugin.TextCommand):
 
         IDOK = 1
 
-        rgb = self.__hexstr_to_bgr(color) if color else 0x00000000
+        rgb = self.__hexstr_to_rgb(color) if color else 0x00000000
         fg = c_uint32(rgb)          # black by default
         bg = c_uint32(0xFFFFFFFF)   # white background
         re = fn(None, byref(fg), byref(bg))
         if re == IDOK:
-            return self.__bgr_to_hexstr(fg.value & 0xFFFFFF) # without alpha
+            return self.__rgb_to_hexstr(fg.value & 0xFFFFFF) # without alpha
 
 
     def __get_pixel(self):
@@ -280,21 +280,24 @@ class ColorPickCommand(sublime_plugin.TextCommand):
         except ValueError:
             return False
 
-    def __bgr_to_hexstr(self, bgr, byte_table=list(['{0:02X}'.format(b) for b in range(256)])):
-        # 0x00BBGGRR
-        b = byte_table[(bgr >> 16) & 0xff]
-        g = byte_table[(bgr >>  8) & 0xff]
-        r = byte_table[(bgr      ) & 0xff]
+    def __rgb_to_hexstr(self, rgb, byte_table=list(['{0:02X}'.format(b) for b in range(256)])):
+        # 0x00RRGGBB
+        r = byte_table[(rgb >> 16) & 0xff]
+        g = byte_table[(rgb >>  8) & 0xff]
+        b = byte_table[(rgb      ) & 0xff]
         return (r+g+b)
 
-    def __hexstr_to_bgr(self, hexstr):
+    def __hexstr_to_rgb(self, hexstr):
+        if hexstr[0] == '#':
+            hexstr = hexstr[1:]
+
         if len(hexstr) == 3:
             hexstr = hexstr[0] + hexstr[0] + hexstr[1] + hexstr[1] + hexstr[2] + hexstr[2]
 
         r = int(hexstr[0:2], 16)
         g = int(hexstr[2:4], 16)
         b = int(hexstr[4:6], 16)
-        return (b << 16)| (g << 8) | r
+        return (r << 16)| (g << 8) | b
 
 
 if sublime.platform() == 'osx':
