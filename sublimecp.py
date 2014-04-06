@@ -163,10 +163,9 @@ class ColorPickCommand(sublime_plugin.TextCommand):
         "yellowgreen": "9ACD32"
     }
 
-    def run(self, edit):
-        paste = None
-        color = self.get_selected(edit)     # in 'RRGGBB' format or None
+    def run(self, edit, paste = True):
 
+        color = self.get_selected(edit)     # in 'RRGGBB' format or None
 
         binpath = os.path.join(sublime.packages_path(), usrbin, binname)
         if sublime.platform() == 'windows':
@@ -184,12 +183,14 @@ class ColorPickCommand(sublime_plugin.TextCommand):
             proc = subprocess.Popen(args, stdout=subprocess.PIPE)
             color = proc.communicate()[0].strip()
 
+
         if color:
             if sublime.platform() != 'windows' or sublime_version == 2:
                 color = color.decode('utf-8')
 
             color = '#' + color
-            self.put_selected(edit, color)
+            if paste:
+                self.put_selected(edit, color)
 
 
     def get_selected(self, edit):
