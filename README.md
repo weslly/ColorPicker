@@ -5,7 +5,7 @@
 ![Linux](http://i.minus.com/ihwLvn8m29GxZ.png "Linux")
 
 ###Windows
-![Windows](http://i.minus.com/iY1DDCRG5TsyR.png "Windows")
+![Windows](http://www.linxexplorer.com/screenshots/colorpicker_b.jpg "Windows")
 
 ## Installation
 Install this repository via [Package Control](http://wbond.net/sublime_packages/package_control)
