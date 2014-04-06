@@ -274,7 +274,7 @@ class ColorPickCommand(sublime_plugin.TextCommand):
         r = (rgb >> 16) & 0xff
         g = (rgb >>  8) & 0xff
         b = (rgb      ) & 0xff
-        return "%02x%02x%02x" % (r,g,b)
+        return "%02x%02x%02X " % (r,g,b)
 
     def __hexstr_to_rgb(self, hexstr):
         if hexstr[0] == '#':
