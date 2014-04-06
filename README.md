@@ -23,3 +23,4 @@ To insert or change a selected color, use:
 
 - [Original colorpick plugin for OS X by jnordberg](https://github.com/jnordberg/sublime-colorpick/)
 - [Original colorpick plugin for Windows by animehunter](https://github.com/animehunter/SublimeColorPickerWindowsOnly)
+- [Visual Color Picker for Windows](http://www.linxexplorer.com/colorpicker.html)
