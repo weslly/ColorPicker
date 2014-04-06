@@ -165,26 +165,22 @@ class ColorPickCommand(sublime_plugin.TextCommand):
 
     def run(self, edit):
         paste = None
-        color = self.get_selected(edit)
+        color = self.get_selected(edit)     # in 'RRGGBB' format or None
 
 
+        binpath = os.path.join(sublime.packages_path(), usrbin, binname)
         if sublime.platform() == 'windows':
-
-
-
-        elif sublime.platform() == 'osx':
-            args = [os.path.join(sublime.packages_path(), usrbin, binname)]
-            if start_color_osx:
-                args.append('-startColor')
-                args.append(start_color_osx)
+            color = self.pick_win(binpath, color)
 
         else:
-            args = [os.path.join(sublime.packages_path(), usrbin, binname)]
-            if start_color:
-                args.append(start_color)
+            args = [binpath]
+            if color:
+                if sublime.platform() == 'osx':
+                    args.append('-startColor')
+                    args.append(color)
+                else:
+                    args.append('#' + color)
 
-
-        if sublime.platform() == 'osx' or sublime.platform() == 'linux':
             proc = subprocess.Popen(args, stdout=subprocess.PIPE)
             color = proc.communicate()[0].strip()
 
@@ -192,6 +188,8 @@ class ColorPickCommand(sublime_plugin.TextCommand):
             if sublime.platform() != 'windows' or sublime_version == 2:
                 color = color.decode('utf-8')
 
+            color = '#' + color
+            self.put_selected(edit, color)
 
 
     def get_selected(self, edit):
@@ -230,6 +228,27 @@ class ColorPickCommand(sublime_plugin.TextCommand):
             # otherwise just replace the selected region
             else:
                 self.view.replace(edit, region, color)
+
+
+    def pick_win(self, binpath, color):
+        import ctypes
+        from ctypes import c_int32, c_uint32, c_void_p, c_wchar_p, pointer, POINTER, byref
+
+        # ARGB
+        # UINT __cdecl PickColor(CWnd *pParent, CColorRGBA & colText, CColorRGBA & colBk);
+        dll = ctypes.cdll.LoadLibrary(binpath)
+        fn = dll.PickColor
+        fn.argtypes = [c_void_p, POINTER(c_uint32), POINTER(c_uint32)]
+        fn.restype = c_uint32
+
+        IDOK = 1
+
+        rgb = self.__hexstr_to_bgr(color) if color else 0x00000000
+        fg = c_uint32(rgb)          # black by default
+        bg = c_uint32(0xFFFFFFFF)   # white background
+        re = fn(None, byref(fg), byref(bg))
+        if re == IDOK:
+            return self.__bgr_to_hexstr(fg.value & 0xFFFFFF) # without alpha
 
 
     def __get_pixel(self):
