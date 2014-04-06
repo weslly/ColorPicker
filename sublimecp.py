@@ -192,19 +192,6 @@ class ColorPickCommand(sublime_plugin.TextCommand):
             if sublime.platform() != 'windows' or sublime_version == 2:
                 color = color.decode('utf-8')
 
-            # replace all regions with color
-            for region in sel:
-                word = self.view.word(region)
-                # if the selected word is a valid color, replace it
-                if self.__is_valid_hex_color(self.view.substr(word)):
-                    # include '#' if present
-                    if self.view.substr(word.a - 1) == '#':
-                        word = sublime.Region(word.a - 1, word.b)
-                    # replace
-                    self.view.replace(edit, word, '#' + color)
-                # otherwise just replace the selected region
-                else:
-                    self.view.replace(edit, region, '#' + color)
 
 
     def get_selected(self, edit):
@@ -222,6 +209,27 @@ class ColorPickCommand(sublime_plugin.TextCommand):
 
             if self.__is_valid_hex_color(selected):
                 return selected
+
+
+    def put_selected(self, edit, color):
+        """ replace all regions with color """
+
+        for region in self.view.sel():
+            word = self.view.word(region)
+
+            # if the selected word is a valid color, replace it
+            if self.__is_valid_hex_color(self.view.substr(word)):
+
+                # include '#' if present
+                if self.view.substr(word.a - 1) == '#':
+                    word = sublime.Region(word.a - 1, word.b)
+
+                # replace
+                self.view.replace(edit, word, color)
+
+            # otherwise just replace the selected region
+            else:
+                self.view.replace(edit, region, color)
 
 
     def __get_pixel(self):
