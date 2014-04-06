@@ -260,17 +260,6 @@ class ColorPickCommand(sublime_plugin.TextCommand):
         ReleaseDC(0, hdc)
         return val
 
-    def __to_custom_color_array(self, custom_colors):
-        cc = CustomColorArray()
-        for i in range(16):
-            cc[i] = int(custom_colors[i])
-        return cc
-
-    def __from_custom_color_array(self, custom_colors):
-        cc = [0]*16
-        for i in range(16):
-            cc[i] = str(custom_colors[i])
-        return cc
 
     def __is_valid_hex_color(self, s):
         if len(s) not in (3, 6):
