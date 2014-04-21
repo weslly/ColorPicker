@@ -4,56 +4,48 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <title>Sublime ColorPicker by weslly</title>
-
     <link rel="stylesheet" href="stylesheets/styles.css">
     <link rel="stylesheet" href="stylesheets/pygment_trac.css">
-    <script src="javascripts/scale.fix.js"></script>
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/main.js"></script>
     <!--[if lt IE 9]>
-    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
-<script type="text/javascript">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 
-  var _gaq = _gaq || [];
-  _gaq.push(['_setAccount', 'UA-31677187-1']);
-  _gaq.push(['_trackPageview']);
-
-  (function() {
-    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
-    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
-  })();
-
-</script>
   </head>
   <body>
-    <div class="wrapper">
+
       <header>
         <h1>Sublime ColorPicker</h1>
         <p>A color picker plugin for Sublime Text 2</p>
-        <p class="view"><a href="https://github.com/weslly/ColorPicker">View the Project on GitHub <small>weslly/ColorPicker</small></a></p>
-
-        <hr>
-
-        <h2>Donations</h2>
-If you like this plugin and want to show your appreciation, you can buy me a coffee.
-
-<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
-<input type="hidden" name="cmd" value="_s-xclick">
-<input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----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-----END PKCS7-----
-">
-<input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
-<img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
-</form>
-
-
       </header>
+
+      <div id="banner">
+        <span id="logo"></span>
+
+        <a href="https://github.com/weslly/ColorPicker" class="button fork"><strong>View On GitHub</strong></a>
+        <div class="downloads">
+          <span>Downloads:</span>
+          <ul>
+            <li><a href="https://github.com/weslly/ColorPicker/zipball/master" class="button">ZIP</a></li>
+            <li><a href="https://github.com/weslly/ColorPicker/tarball/master" class="button">TAR</a></li>
+          </ul>
+        </div>
+      </div><!-- end banner -->
+
+    <div class="wrapper">
+      <nav>
+        <ul></ul>
+      </nav>
       <section>
-        <h2>Installation</h2>
+        <h2>
+<a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h2>
 
 <p>Install this repository via <a href="http://wbond.net/sublime_packages/package_control">Package Control</a></p>
 
-<h2>Usage</h2>
+<h2>
+<a name="usage" class="anchor" href="#usage"><span class="octicon octicon-link"></span></a>Usage</h2>
 
 <p>To insert or change a selected color, use:</p>
 
@@ -64,23 +56,26 @@ If you like this plugin and want to show your appreciation, you can buy me a cof
 </li>
 <li>OS X: <code>super+shift+c</code>
 </li>
-</ul><h2>Screenshots</h2>
+</ul><h2>
+<a name="screenshots" class="anchor" href="#screenshots"><span class="octicon octicon-link"></span></a>Screenshots</h2>
 
-<h3>Mac OSX</h3>
+<h3>
+<a name="mac-osx" class="anchor" href="#mac-osx"><span class="octicon octicon-link"></span></a>Mac OSX</h3>
 
 <p><img src="http://i.minus.com/i5KI6SBAfs7Qk.png" alt="Mac OSX" title="Mac OS X"></p>
 
-<h3>Linux</h3>
+<h3>
+<a name="linux" class="anchor" href="#linux"><span class="octicon octicon-link"></span></a>Linux</h3>
 
 <p><img src="http://i.minus.com/ihwLvn8m29GxZ.png" alt="Linux" title="Linux"></p>
 
-<h3>Windows</h3>
+<h3>
+<a name="windows" class="anchor" href="#windows"><span class="octicon octicon-link"></span></a>Windows</h3>
 
 <p><img src="http://i.minus.com/iY1DDCRG5TsyR.png" alt="Windows" title="Windows"></p>
 
-
-
-<h2>Acknowledgements</h2>
+<h2>
+<a name="acknowledgements" class="anchor" href="#acknowledgements"><span class="octicon octicon-link"></span></a>Acknowledgements</h2>
 
 <ul>
 <li><a href="https://github.com/jnordberg/sublime-colorpick/">Original colorpick plugin for OS X by jnordberg</a></li>
@@ -88,11 +83,21 @@ If you like this plugin and want to show your appreciation, you can buy me a cof
 </ul>
       </section>
       <footer>
-        <p>This project is maintained by <a href="https://github.com/weslly">weslly</a></p>
-        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+        <p>Project maintained by <a href="https://github.com/weslly">weslly</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></small></p>
       </footer>
     </div>
-    <script>mixpanel.track("Visit");</script>
-    <!--[if !IE]><script>fixScale(document);</script><!--<![endif]-->
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+              <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-31677187-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
   </body>
 </html>
