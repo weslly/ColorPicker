@@ -217,9 +217,16 @@ class ColorPickCommand(sublime_plugin.TextCommand):
 
         for region in self.view.sel():
             word = self.view.word(region)
+            #gotta find the closest rgb from the caret position
             line = self.view.substr(self.view.line(region))
+            svg_color_hex = self.SVGColors.get(self.view.substr(word).strip(), None)
+            if svg_color_hex != None:
+                self.view.replace(edit, word, color)
             # if the selected word is a valid color, replace it
-            if self.__is_valid_hex_color(self.view.substr(word)):
+            elif "rgb" in line:
+                repl = re.sub(r'(rgb[a]?\s*\([0-9\.\,\s]*\))', color, line, 1) #(?!.*rgb)
+                self.view.replace(edit, self.view.line(region), repl)
+            elif self.__is_valid_hex_color(self.view.substr(word)):
 
                 # include '#' if present
                 if self.view.substr(word.a - 1) == '#':
@@ -227,11 +234,6 @@ class ColorPickCommand(sublime_plugin.TextCommand):
 
                 # replace
                 self.view.replace(edit, word, color)
-
-            # replace for rgb
-            elif line.find("rgb"):
-                repl = re.sub(r'(rgb[a]?\s*\([0-9\.\,\s]*\))', color, line)
-                self.view.replace(edit, self.view.line(region), repl)
 
             # otherwise just replace the selected region
             else:
