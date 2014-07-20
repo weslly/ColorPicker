@@ -5,7 +5,7 @@
 ![Linux](http://i.minus.com/ihwLvn8m29GxZ.png "Linux")
 
 ###Windows
-![Windows](http://www.linxexplorer.com/screenshots/colorpicker_b.jpg "Windows")
+![Windows](http://i.minus.com/iY1DDCRG5TsyR.png "Windows")
 
 ## Installation
 Install this repository via [Package Control](http://wbond.net/sublime_packages/package_control)
@@ -23,4 +23,3 @@ To insert or change a selected color, use:
 
 - [Original colorpick plugin for OS X by jnordberg](https://github.com/jnordberg/sublime-colorpick/)
 - [Original colorpick plugin for Windows by animehunter](https://github.com/animehunter/SublimeColorPickerWindowsOnly)
-- [Visual Color Picker for Windows](http://www.linxexplorer.com/colorpicker.html)
