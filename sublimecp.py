@@ -4,6 +4,7 @@ import subprocess
 import os
 from stat import *
 import threading
+import re
 
 sublime_version = 2
 
@@ -188,7 +189,7 @@ class ColorPickCommand(sublime_plugin.TextCommand):
             if sublime.platform() != 'windows' or sublime_version == 2:
                 color = color.decode('utf-8')
 
-            color = '#' + color
+            # color = '#' + color
             if paste:
                 self.put_selected(edit, color)
 
@@ -200,14 +201,15 @@ class ColorPickCommand(sublime_plugin.TextCommand):
         sel = self.view.sel()
         if len(sel) > 0:
             selected = self.view.substr(self.view.word(sel[0])).strip()
-            if selected.startswith('#'): selected = selected[1:]
-
-            svg_color_hex = self.SVGColors.get(selected, None)
-            if svg_color_hex != None:
-                selected = svg_color_hex
-
-            if self.__is_valid_hex_color(selected):
-                return selected
+            line = self.view.substr(self.view.line(sel[0])).strip()
+            if selected.startswith('#'): 
+                selected = selected[1:]
+                svg_color_hex = self.SVGColors.get(selected, None)
+                if svg_color_hex != None:
+                    selected = svg_color_hex
+            elif "rgb" in line:
+                selected = re.findall(r'(rgb[a]?\s*\([0-9\.\,\s]*\))', line)[0]
+            return selected
 
 
     def put_selected(self, edit, color):
@@ -215,9 +217,16 @@ class ColorPickCommand(sublime_plugin.TextCommand):
 
         for region in self.view.sel():
             word = self.view.word(region)
-
+            #gotta find the closest rgb from the caret position
+            line = self.view.substr(self.view.line(region))
+            svg_color_hex = self.SVGColors.get(self.view.substr(word).strip(), None)
+            if svg_color_hex != None:
+                self.view.replace(edit, word, color)
             # if the selected word is a valid color, replace it
-            if self.__is_valid_hex_color(self.view.substr(word)):
+            elif "rgb" in line:
+                repl = re.sub(r'(rgb[a]?\s*\([0-9\.\,\s]*\))', color, line, 1) #(?!.*rgb)
+                self.view.replace(edit, self.view.line(region), repl)
+            elif self.__is_valid_hex_color(self.view.substr(word)):
 
                 # include '#' if present
                 if self.view.substr(word.a - 1) == '#':
