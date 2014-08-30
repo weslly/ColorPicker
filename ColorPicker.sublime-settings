@@ -1,0 +1,5 @@
+{
+    // For upper-case output (#ABCDEF), set "color_upper_case" to true
+    // For lower-case (#abcdef), use false
+    "color_upper_case": true
+}

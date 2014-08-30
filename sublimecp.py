@@ -280,6 +280,14 @@ class ColorPickCommand(sublime_plugin.TextCommand):
             if sublime.platform() != 'windows' or sublime_version == 2:
                 color = color.decode('utf-8')
 
+            # Determine user preference for case of letters (default upper)
+            s = sublime.load_settings("ColorPicker.sublime-settings")
+            upper_case = s.get("color_upper_case", True)
+            if upper_case:
+                color = color.upper()
+            else:
+                color = color.lower()
+
             # replace all regions with color
             for region in sel:
                 word = self.view.word(region)
