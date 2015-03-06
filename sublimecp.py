@@ -11,23 +11,24 @@ if not sublime.version() or int(sublime.version()) > 3000:
     sublime_version = 3
 
 if sublime.platform() == 'windows':
+
     import ctypes
-    from ctypes import c_int32, c_uint32, c_void_p, c_wchar_p, pointer, POINTER
+    from ctypes import c_int32, c_uint32, c_void_p, c_wchar_p, POINTER
 
     class CHOOSECOLOR(ctypes.Structure):
-         _fields_ = [('lStructSize', c_uint32),
-                     ('hwndOwner', c_void_p),
-                     ('hInstance', c_void_p),
-                     ('rgbResult', c_uint32),
-                     ('lpCustColors',POINTER(c_uint32)),
-                     ('Flags', c_uint32),
-                     ('lCustData', c_void_p),
-                     ('lpfnHook', c_void_p),
-                     ('lpTemplateName', c_wchar_p)]
+        _fields_ = [('lStructSize', c_uint32),
+                    ('hwndOwner', c_void_p),
+                    ('hInstance', c_void_p),
+                    ('rgbResult', c_uint32),
+                    ('lpCustColors', POINTER(c_uint32)),
+                    ('Flags', c_uint32),
+                    ('lCustData', c_void_p),
+                    ('lpfnHook', c_void_p),
+                    ('lpTemplateName', c_wchar_p)]
 
     class POINT(ctypes.Structure):
-         _fields_ = [('x', c_int32),
-                     ('y', c_int32)]
+        _fields_ = [('x', c_int32),
+                    ('y', c_int32)]
 
     CustomColorArray = c_uint32 * 16
     CC_SOLIDCOLOR = 0x80
@@ -43,19 +44,19 @@ if sublime.platform() == 'windows':
     GetDC.restype = c_void_p
 
     ReleaseDC = ctypes.windll.User32.ReleaseDC
-    ReleaseDC.argtypes = [c_void_p, c_void_p] #hwnd, hdc
+    ReleaseDC.argtypes = [c_void_p, c_void_p]  # hwnd, hdc
     ReleaseDC.restype = c_int32
 
     GetCursorPos = ctypes.windll.User32.GetCursorPos
-    GetCursorPos.argtypes = [POINTER(POINT)] # POINT
+    GetCursorPos.argtypes = [POINTER(POINT)]  # POINT
     GetCursorPos.restype = c_int32
 
     GetPixel = ctypes.windll.Gdi32.GetPixel
-    GetPixel.argtypes = [c_void_p, c_int32, c_int32] # hdc, x, y
-    GetPixel.restype = c_uint32 # colorref
+    GetPixel.argtypes = [c_void_p, c_int32, c_int32]  # hdc, x, y
+    GetPixel.restype = c_uint32  # colorref
 
 
-class ColorPickCommand(sublime_plugin.TextCommand):
+class ColorPicker(object):
     # SVG Colors spec: http://www.w3.org/TR/css3-color/#svg-color
     SVGColors = {
         "aliceblue": "F0F8FF",
@@ -207,35 +208,29 @@ class ColorPickCommand(sublime_plugin.TextCommand):
         "yellowgreen": "9ACD32"
     }
 
-    def run(self, edit):
+    def pick(self, window, starting_color=None):
         paste = None
-        sel = self.view.sel()
         start_color = None
         start_color_osx = None
         start_color_win = None
 
-        # get the currently selected color - if any
-        if len(sel) > 0:
-            selected = self.view.substr(self.view.word(sel[0])).strip()
-            if selected.startswith('#'): selected = selected[1:]
+        if starting_color is not None:
+            svg_color_hex = self.SVGColors.get(starting_color, None)
+            if svg_color_hex is not None:
+                starting_color = svg_color_hex
 
-            svg_color_hex = self.SVGColors.get(selected, None)
-            if svg_color_hex != None:
-                selected = svg_color_hex
-
-            if self.__is_valid_hex_color(selected):
-                start_color = "#" + selected
-                start_color_osx = selected
-                start_color_win = self.__hexstr_to_bgr(selected)
-
+            if self.is_valid_hex_color(starting_color):
+                start_color = "#" + starting_color
+                start_color_osx = starting_color
+                start_color_win = self.__hexstr_to_bgr(starting_color)
 
         if sublime.platform() == 'windows':
 
             s = sublime.load_settings("ColorPicker.sublime-settings")
-            custom_colors = s.get("custom_colors", ['0']*16)
+            custom_colors = s.get("custom_colors", ['0'] * 16)
 
             if len(custom_colors) < 16:
-                custom_colors = ['0']*16
+                custom_colors = ['0'] * 16
                 s.set('custom_colors', custom_colors)
 
             cc = CHOOSECOLOR()
@@ -243,7 +238,7 @@ class ColorPickCommand(sublime_plugin.TextCommand):
             cc.lStructSize = ctypes.sizeof(cc)
 
             if sublime_version == 2:
-                cc.hwndOwner = self.view.window().hwnd()
+                cc.hwndOwner = window.hwnd()
             else:
                 # Temporary fix for Sublime Text 3 - For some reason the hwnd crashes it
                 # Of course, clicking out of the colour picker and into Sublime will make
@@ -259,7 +254,6 @@ class ColorPickCommand(sublime_plugin.TextCommand):
             else:
                 color = None
 
-
         elif sublime.platform() == 'osx':
             args = [os.path.join(sublime.packages_path(), usrbin, binname)]
             if start_color_osx:
@@ -271,7 +265,6 @@ class ColorPickCommand(sublime_plugin.TextCommand):
             if start_color:
                 args.append(start_color)
 
-
         if sublime.platform() == 'osx' or sublime.platform() == 'linux':
             proc = subprocess.Popen(args, stdout=subprocess.PIPE)
             color = proc.communicate()[0].strip()
@@ -280,28 +273,7 @@ class ColorPickCommand(sublime_plugin.TextCommand):
             if sublime.platform() != 'windows' or sublime_version == 2:
                 color = color.decode('utf-8')
 
-            # Determine user preference for case of letters (default upper)
-            s = sublime.load_settings("ColorPicker.sublime-settings")
-            upper_case = s.get("color_upper_case", True)
-            if upper_case:
-                color = color.upper()
-            else:
-                color = color.lower()
-
-            # replace all regions with color
-            for region in sel:
-                word = self.view.word(region)
-                # if the selected word is a valid color, replace it
-                if self.__is_valid_hex_color(self.view.substr(word)):
-                    # include '#' if present
-                    if self.view.substr(word.a - 1) == '#':
-                        word = sublime.Region(word.a - 1, word.b)
-                    # replace
-                    self.view.replace(edit, word, '#' + color)
-                # otherwise just replace the selected region
-                else:
-                    self.view.replace(edit, region, '#' + color)
-
+        return color
 
     def __get_pixel(self):
         hdc = GetDC(0)
@@ -318,12 +290,12 @@ class ColorPickCommand(sublime_plugin.TextCommand):
         return cc
 
     def __from_custom_color_array(self, custom_colors):
-        cc = [0]*16
+        cc = [0] * 16
         for i in range(16):
             cc[i] = str(custom_colors[i])
         return cc
 
-    def __is_valid_hex_color(self, s):
+    def is_valid_hex_color(self, s):
         if len(s) not in (3, 6):
             return False
         try:
@@ -334,9 +306,9 @@ class ColorPickCommand(sublime_plugin.TextCommand):
     def __bgr_to_hexstr(self, bgr, byte_table=list(['{0:02X}'.format(b) for b in range(256)])):
         # 0x00BBGGRR
         b = byte_table[(bgr >> 16) & 0xff]
-        g = byte_table[(bgr >>  8) & 0xff]
-        r = byte_table[(bgr      ) & 0xff]
-        return (r+g+b)
+        g = byte_table[(bgr >> 8) & 0xff]
+        r = byte_table[(bgr) & 0xff]
+        return (r + g + b)
 
     def __hexstr_to_bgr(self, hexstr):
         if len(hexstr) == 3:
@@ -345,7 +317,57 @@ class ColorPickCommand(sublime_plugin.TextCommand):
         r = int(hexstr[0:2], 16)
         g = int(hexstr[2:4], 16)
         b = int(hexstr[4:6], 16)
-        return (b << 16)| (g << 8) | r
+        return (b << 16) | (g << 8) | r
+
+
+class ColorPickApiGetColorCommand(sublime_plugin.WindowCommand):
+    def run(self, settings, default_color=None):
+        color = ColorPicker().pick(self.window, default_color)
+
+        s = sublime.load_settings(settings)
+        s.set('color_pick_return', '#' + color if color is not None else None)
+
+
+class ColorPickApiIsAvailableCommand(sublime_plugin.ApplicationCommand):
+    def run(self, settings):
+        s = sublime.load_settings(settings)
+        s.set('color_pick_return', True)
+
+
+class ColorPickCommand(sublime_plugin.TextCommand):
+    def run(self, edit):
+        sel = self.view.sel()
+        selected = None
+        # get the currently selected color - if any
+        if len(sel) > 0:
+            selected = self.view.substr(self.view.word(sel[0])).strip()
+            if selected.startswith('#'):
+                selected = selected[1:]
+
+        cp = ColorPicker()
+        color = cp.pick(self.view.window(), selected)
+
+        # Determine user preference for case of letters (default upper)
+        s = sublime.load_settings("ColorPicker.sublime-settings")
+        upper_case = s.get("color_upper_case", True)
+        if upper_case:
+            color = color.upper()
+        else:
+            color = color.lower()
+
+        # replace all regions with color
+        for region in sel:
+            word = self.view.word(region)
+            # if the selected word is a valid color, replace it
+            if cp.is_valid_hex_color(self.view.substr(word)):
+                # include '#' if present
+                if self.view.substr(word.a - 1) == '#':
+                    word = sublime.Region(word.a - 1, word.b)
+                # replace
+                self.view.replace(edit, word, '#' + color)
+            # otherwise just replace the selected region
+            else:
+                self.view.replace(edit, region, '#' + color)
 
 
 if sublime.platform() == 'osx':
@@ -354,6 +376,7 @@ else:
     binname = 'linux_colorpicker.py'
 
 usrbin = os.path.join('User', 'ColorPicker', 'bin')
+
 
 def update_binary():
     bindir = os.path.join(sublime.packages_path(), usrbin)
@@ -373,16 +396,16 @@ def update_binary():
 
     if os.path.exists(libpath):
         libinfo = os.stat(libpath)
-        if bininfo == None or bininfo[ST_MTIME] < libinfo[ST_MTIME]:
+        if bininfo is None or bininfo[ST_MTIME] < libinfo[ST_MTIME]:
             with open(libpath, 'rb') as libfile:
                 bindata = libfile.read()
                 libfile.close()
     elif sublime_version == 3 and os.path.exists(pkgpath):
         pkginfo = os.stat(pkgpath)
-        if bininfo == None or bininfo[ST_MTIME] < pkginfo[ST_MTIME]:
+        if bininfo is None or bininfo[ST_MTIME] < pkginfo[ST_MTIME]:
             bindata = sublime.load_binary_resource(respath)
 
-    if bindata != None:
+    if bindata is not None:
         print("* Updating " + binpath)
         with open(binpath, 'wb') as binfile:
             binfile.write(bindata)
@@ -408,7 +431,7 @@ else:
         def run(self):
             self.callback()
 
-    def set_timeout_async(callback, delay_ms = 0):
+    def set_timeout_async(callback, delay_ms=0):
         sublime.set_timeout(lambda: Async(callback).start(), delay_ms)
 
     plugin_loaded()
