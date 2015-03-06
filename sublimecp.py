@@ -325,7 +325,7 @@ class ColorPickApiGetColorCommand(sublime_plugin.WindowCommand):
         color = ColorPicker().pick(self.window, default_color)
 
         s = sublime.load_settings(settings)
-        s.set('color_pick_return', '#' + color if color is not None else None)
+        s.set('color_pick_return', '#' + color if color else None)
 
 
 class ColorPickApiIsAvailableCommand(sublime_plugin.ApplicationCommand):
