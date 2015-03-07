@@ -92,7 +92,9 @@ if sublime.platform() == 'windows':
 
     def win_pick(window, starting_color):
         paste = None
-        starting_color = hexstr_to_bgr(starting_color)
+        start_color = None
+        if starting_color is not None:
+            start_color = hexstr_to_bgr(starting_color[1:])
         s = sublime.load_settings("ColorPicker.sublime-settings")
         custom_colors = s.get("custom_colors", ['0'] * 16)
 
@@ -113,7 +115,7 @@ if sublime.platform() == 'windows':
             cc.hwndOwner = None
 
         cc.Flags = CC_SOLIDCOLOR | CC_FULLOPEN | CC_RGBINIT
-        cc.rgbResult = c_uint32(start_color_win) if not paste and start_color_win else get_pixel()
+        cc.rgbResult = c_uint32(start_color) if not paste and start_color else get_pixel()
         cc.lpCustColors = to_custom_color_array(custom_colors)
 
         if ChooseColorW(ctypes.byref(cc)):
@@ -290,7 +292,7 @@ class ColorPicker(object):
                 start_color_osx = starting_color
 
         if sublime.platform() == 'windows':
-            color = win_pick(window, starting_color)
+            color = win_pick(window, start_color)
 
         elif sublime.platform() == 'osx':
             args = [os.path.join(sublime.packages_path(), binpath)]
