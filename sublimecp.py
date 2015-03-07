@@ -55,6 +55,75 @@ if sublime.platform() == 'windows':
     GetPixel.argtypes = [c_void_p, c_int32, c_int32]  # hdc, x, y
     GetPixel.restype = c_uint32  # colorref
 
+    def get_pixel():
+        hdc = GetDC(0)
+        pos = POINT()
+        GetCursorPos(ctypes.byref(pos))
+        val = GetPixel(hdc, pos.x, pos.y)
+        ReleaseDC(0, hdc)
+        return val
+
+    def to_custom_color_array(self, custom_colors):
+        cc = CustomColorArray()
+        for i in range(16):
+            cc[i] = int(custom_colors[i])
+        return cc
+
+    def from_custom_color_array(self, custom_colors):
+        cc = [0] * 16
+        for i in range(16):
+            cc[i] = str(custom_colors[i])
+        return cc
+
+    def bgr_to_hexstr(bgr, byte_table=list(['{0:02X}'.format(b) for b in range(256)])):
+        # 0x00BBGGRR
+        b = byte_table[(bgr >> 16) & 0xff]
+        g = byte_table[(bgr >> 8) & 0xff]
+        r = byte_table[(bgr) & 0xff]
+        return (r + g + b)
+
+    def hexstr_to_bgr(hexstr):
+        if len(hexstr) == 3:
+            hexstr = hexstr[0] + hexstr[0] + hexstr[1] + hexstr[1] + hexstr[2] + hexstr[2]
+
+        r = int(hexstr[0:2], 16)
+        g = int(hexstr[2:4], 16)
+        b = int(hexstr[4:6], 16)
+        return (b << 16) | (g << 8) | r
+
+    def win_pick(window, starting_color):
+        paste = None
+        starting_color = hexstr_to_bgr(starting_color)
+        s = sublime.load_settings("ColorPicker.sublime-settings")
+        custom_colors = s.get("custom_colors", ['0'] * 16)
+
+        if len(custom_colors) < 16:
+            custom_colors = ['0'] * 16
+            s.set('custom_colors', custom_colors)
+
+        cc = CHOOSECOLOR()
+        ctypes.memset(ctypes.byref(cc), 0, ctypes.sizeof(cc))
+        cc.lStructSize = ctypes.sizeof(cc)
+
+        if sublime_version == 2:
+            cc.hwndOwner = window.hwnd()
+        else:
+            # Temporary fix for Sublime Text 3 - For some reason the hwnd crashes it
+            # Of course, clicking out of the colour picker and into Sublime will make
+            # Sublime not respond, but as soon as you exit the colour picker it's ok
+            cc.hwndOwner = None
+
+        cc.Flags = CC_SOLIDCOLOR | CC_FULLOPEN | CC_RGBINIT
+        cc.rgbResult = c_uint32(start_color_win) if not paste and start_color_win else get_pixel()
+        cc.lpCustColors = to_custom_color_array(custom_colors)
+
+        if ChooseColorW(ctypes.byref(cc)):
+            color = bgr_to_hexstr(cc.rgbResult)
+        else:
+            color = None
+
+        return color
+
 
 class ColorPicker(object):
     # SVG Colors spec: http://www.w3.org/TR/css3-color/#svg-color
@@ -209,10 +278,8 @@ class ColorPicker(object):
     }
 
     def pick(self, window, starting_color=None):
-        paste = None
         start_color = None
         start_color_osx = None
-        start_color_win = None
 
         if starting_color is not None:
             svg_color_hex = self.SVGColors.get(starting_color, None)
@@ -222,37 +289,9 @@ class ColorPicker(object):
             if self.is_valid_hex_color(starting_color):
                 start_color = "#" + starting_color
                 start_color_osx = starting_color
-                start_color_win = self.__hexstr_to_bgr(starting_color)
 
         if sublime.platform() == 'windows':
-
-            s = sublime.load_settings("ColorPicker.sublime-settings")
-            custom_colors = s.get("custom_colors", ['0'] * 16)
-
-            if len(custom_colors) < 16:
-                custom_colors = ['0'] * 16
-                s.set('custom_colors', custom_colors)
-
-            cc = CHOOSECOLOR()
-            ctypes.memset(ctypes.byref(cc), 0, ctypes.sizeof(cc))
-            cc.lStructSize = ctypes.sizeof(cc)
-
-            if sublime_version == 2:
-                cc.hwndOwner = window.hwnd()
-            else:
-                # Temporary fix for Sublime Text 3 - For some reason the hwnd crashes it
-                # Of course, clicking out of the colour picker and into Sublime will make
-                # Sublime not respond, but as soon as you exit the colour picker it's ok
-                cc.hwndOwner = None
-
-            cc.Flags = CC_SOLIDCOLOR | CC_FULLOPEN | CC_RGBINIT
-            cc.rgbResult = c_uint32(start_color_win) if not paste and start_color_win else self.__get_pixel()
-            cc.lpCustColors = self.__to_custom_color_array(custom_colors)
-
-            if ChooseColorW(ctypes.byref(cc)):
-                color = self.__bgr_to_hexstr(cc.rgbResult)
-            else:
-                color = None
+            color = win_pick(window, starting_color)
 
         elif sublime.platform() == 'osx':
             args = [os.path.join(sublime.packages_path(), usrbin, binname)]
@@ -265,7 +304,7 @@ class ColorPicker(object):
             if start_color:
                 args.append(start_color)
 
-        if sublime.platform() == 'osx' or sublime.platform() == 'linux':
+        if sublime.platform() != 'windows':
             proc = subprocess.Popen(args, stdout=subprocess.PIPE)
             color = proc.communicate()[0].strip()
 
@@ -275,26 +314,6 @@ class ColorPicker(object):
 
         return color
 
-    def __get_pixel(self):
-        hdc = GetDC(0)
-        pos = POINT()
-        GetCursorPos(ctypes.byref(pos))
-        val = GetPixel(hdc, pos.x, pos.y)
-        ReleaseDC(0, hdc)
-        return val
-
-    def __to_custom_color_array(self, custom_colors):
-        cc = CustomColorArray()
-        for i in range(16):
-            cc[i] = int(custom_colors[i])
-        return cc
-
-    def __from_custom_color_array(self, custom_colors):
-        cc = [0] * 16
-        for i in range(16):
-            cc[i] = str(custom_colors[i])
-        return cc
-
     def is_valid_hex_color(self, s):
         if len(s) not in (3, 6):
             return False
@@ -302,22 +321,6 @@ class ColorPicker(object):
             return 0 <= int(s, 16) <= 0xffffff
         except ValueError:
             return False
-
-    def __bgr_to_hexstr(self, bgr, byte_table=list(['{0:02X}'.format(b) for b in range(256)])):
-        # 0x00BBGGRR
-        b = byte_table[(bgr >> 16) & 0xff]
-        g = byte_table[(bgr >> 8) & 0xff]
-        r = byte_table[(bgr) & 0xff]
-        return (r + g + b)
-
-    def __hexstr_to_bgr(self, hexstr):
-        if len(hexstr) == 3:
-            hexstr = hexstr[0] + hexstr[0] + hexstr[1] + hexstr[1] + hexstr[2] + hexstr[2]
-
-        r = int(hexstr[0:2], 16)
-        g = int(hexstr[2:4], 16)
-        b = int(hexstr[4:6], 16)
-        return (b << 16) | (g << 8) | r
 
 
 class ColorPickApiGetColorCommand(sublime_plugin.WindowCommand):
