@@ -62,13 +62,13 @@ if sublime.platform() == 'windows':
         ReleaseDC(0, hdc)
         return val
 
-    def to_custom_color_array(self, custom_colors):
+    def to_custom_color_array(custom_colors):
         cc = CustomColorArray()
         for i in range(16):
             cc[i] = int(custom_colors[i])
         return cc
 
-    def from_custom_color_array(self, custom_colors):
+    def from_custom_color_array(custom_colors):
         cc = [0] * 16
         for i in range(16):
             cc[i] = str(custom_colors[i])
