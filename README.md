@@ -40,7 +40,7 @@ This command is used to call a color picker and get the selected value.  It take
 ```python
 >> settings = sublime.load_settings('my_shared.sublime-settings')
 >> settings.set('color_pick_return', None)
->> sublime.run_command('color_pick_api_get_color', {'settings': 'my_shared.sublime-settings', 'default_color': 'ff0000'})
+>> sublime.run_command('color_pick_api_get_color', {'settings': 'my_shared.sublime-settings', 'default_color': '#ff0000'})
 >> print(settings.get('color_pick_return'))
 #23af44
 ```

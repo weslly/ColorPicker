@@ -325,6 +325,8 @@ class ColorPicker(object):
 
 class ColorPickApiGetColorCommand(sublime_plugin.WindowCommand):
     def run(self, settings, default_color=None):
+        if default_color is not None and default_color.startswith('#'):
+            default_color = default_color[1:]
         color = ColorPicker().pick(self.window, default_color)
 
         s = sublime.load_settings(settings)
