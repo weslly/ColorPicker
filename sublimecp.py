@@ -384,7 +384,7 @@ else:
 
 
 def plugin_loaded():
-    if sublime.platform() == 'osx':
+    if sublime.platform() == 'osx' or sublime.platform() == 'linux':
         binfile = os.path.join(sublime.packages_path(), binpath)
         if not os.access(binfile, os.X_OK):
             os.chmod(binfile, 0o755)
