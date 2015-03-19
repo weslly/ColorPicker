@@ -364,27 +364,28 @@ class ColorPickCommand(sublime_plugin.TextCommand):
         cp = ColorPicker()
         color = cp.pick(self.view.window(), selected)
 
-        # Determine user preference for case of letters (default upper)
-        s = sublime.load_settings("ColorPicker.sublime-settings")
-        upper_case = s.get("color_upper_case", True)
-        if upper_case:
-            color = color.upper()
-        else:
-            color = color.lower()
-
-        # replace all regions with color
-        for region in sel:
-            word = self.view.word(region)
-            # if the selected word is a valid color, replace it
-            if cp.is_valid_hex_color(self.view.substr(word)):
-                # include '#' if present
-                if self.view.substr(word.a - 1) == '#':
-                    word = sublime.Region(word.a - 1, word.b)
-                # replace
-                self.view.replace(edit, word, '#' + color)
-            # otherwise just replace the selected region
+        if color:
+            # Determine user preference for case of letters (default upper)
+            s = sublime.load_settings("ColorPicker.sublime-settings")
+            upper_case = s.get("color_upper_case", True)
+            if upper_case:
+                color = color.upper()
             else:
-                self.view.replace(edit, region, '#' + color)
+                color = color.lower()
+
+            # replace all regions with color
+            for region in sel:
+                word = self.view.word(region)
+                # if the selected word is a valid color, replace it
+                if cp.is_valid_hex_color(self.view.substr(word)):
+                    # include '#' if present
+                    if self.view.substr(word.a - 1) == '#':
+                        word = sublime.Region(word.a - 1, word.b)
+                    # replace
+                    self.view.replace(edit, word, '#' + color)
+                # otherwise just replace the selected region
+                else:
+                    self.view.replace(edit, region, '#' + color)
 
 
 libdir = os.path.join('ColorPicker', 'lib')
