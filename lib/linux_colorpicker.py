@@ -23,7 +23,7 @@ if len(sys.argv) > 1:
             color_sel.get_color_selection().set_current_color(current_color)
 
 
-if color_sel.run() == getattr(Gtk, 'RESPONSE_OK', Gtk.ResponseType.Ok):
+if color_sel.run() == getattr(Gtk, 'RESPONSE_OK', Gtk.ResponseType.OK):
     color = color_sel.get_color_selection().get_current_color()
     #Convert to 8bit channels
     red = int(color.red / 256)
