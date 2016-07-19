@@ -345,6 +345,18 @@ class ColorPickApiGetColorCommand(sublime_plugin.WindowCommand):
         s = sublime.load_settings(settings)
         s.set('color_pick_return', '#' + color if color else None)
 
+class ColorPickApiGetColorAsyncCommand(sublime_plugin.WindowCommand):
+    def run(self, settings, default_color=None):
+        if default_color is not None and default_color.startswith('#'):
+            default_color = default_color[1:]
+
+        s = sublime.load_settings(settings)
+
+        def worker():
+            color = ColorPicker().pick(self.window, default_color)
+
+            s.set('color_pick_return', '#' + color if color else None)
+
 
 class ColorPickApiIsAvailableCommand(sublime_plugin.ApplicationCommand):
     def run(self, settings):
