@@ -366,10 +366,21 @@ class ColorPickApiIsAvailableCommand(sublime_plugin.ApplicationCommand):
 # cannot use edit objects in separate threads, so we need a helper command
 class ColorPickReplaceRegionsHelperCommand(sublime_plugin.TextCommand):
     def run(self, edit, color):
-        regions = self.view.get_regions('ColorPick')
+        def replaceRegionsRecursion():
+            regions = self.view.get_regions('ColorPick')
+            if not regions:
+                return
 
-        for region in regions:
+            region = regions[0]
+
+            self.view.erase_regions('ColorPick')
+            self.view.add_regions('ColorPick', regions[1:])
+
             self.view.replace(edit, region, color)
+
+            replaceRegionsRecursion()
+
+        replaceRegionsRecursion() # we change where the text points refer, so we have to replace one, and then refetch the locations
 
 class ColorPickCommand(sublime_plugin.TextCommand):
     def run(self, edit):
@@ -398,6 +409,7 @@ class ColorPickCommand(sublime_plugin.TextCommand):
             else:
                 regions.append(region)
 
+        self.view.erase_regions('ColorPick')
         self.view.add_regions('ColorPick', regions)
 
         def worker():
