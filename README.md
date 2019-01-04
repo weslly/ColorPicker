@@ -5,7 +5,7 @@
 ![Linux](http://i.minus.com/ihwLvn8m29GxZ.png "Linux")
 
 ###Windows
-![Windows](http://i.minus.com/iY1DDCRG5TsyR.png "Windows")
+![Windows](https://github.com/pwnbit/ColorPicker/blob/pwnbit-patch-1/win_colorpicker_screenshot.png)
 
 ## Installation
 Install this repository via [Package Control](https://sublime.wbond.net).
