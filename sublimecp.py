@@ -324,8 +324,12 @@ class ColorPicker(object):
             ):
                 color = color.decode('utf-8')
                 
-        # New win_Colorpicker.exe has return hex color code and alpha code. (ex: #FF0000FF = Red color + transparency 100%)
-        color = color.replace('#','')[:6]
+                # New win_Colorpicker.exe has return hex color code and alpha code. (ex: #FF0000FF = Red color + transparency 100%)
+                # Only applied to 'win_colorpicker.exe'.
+                if color == "CANCEL":    # When canceled.
+                    color = ""
+                else:
+                    color = color.replace('#','')[:6]
         
         return color
 
