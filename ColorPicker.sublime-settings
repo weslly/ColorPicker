@@ -4,5 +4,5 @@
     "color_upper_case": true,
     
     // Set false to use the default windows colorpicker
-    "win_use_new_picker": true
+    "win_use_new_picker": false
 }
