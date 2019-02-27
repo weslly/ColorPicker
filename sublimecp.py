@@ -2,6 +2,7 @@ import sublime
 import sublime_plugin
 import subprocess
 import os
+import threading
 from stat import *
 
 sublime_version = 2
@@ -344,12 +345,42 @@ class ColorPickApiGetColorCommand(sublime_plugin.WindowCommand):
         s = sublime.load_settings(settings)
         s.set('color_pick_return', '#' + color if color else None)
 
+class ColorPickApiGetColorAsyncCommand(sublime_plugin.WindowCommand):
+    def run(self, settings, default_color=None):
+        if default_color is not None and default_color.startswith('#'):
+            default_color = default_color[1:]
+
+        s = sublime.load_settings(settings)
+
+        def worker():
+            color = ColorPicker().pick(self.window, default_color)
+
+            s.set('color_pick_return', '#' + color if color else None)
+
 
 class ColorPickApiIsAvailableCommand(sublime_plugin.ApplicationCommand):
     def run(self, settings):
         s = sublime.load_settings(settings)
         s.set('color_pick_return', True)
 
+# cannot use edit objects in separate threads, so we need a helper command
+class ColorPickReplaceRegionsHelperCommand(sublime_plugin.TextCommand):
+    def run(self, edit, color):
+        def replaceRegionsRecursion():
+            regions = self.view.get_regions('ColorPick')
+            if not regions:
+                return
+
+            region = regions[0]
+
+            self.view.erase_regions('ColorPick')
+            self.view.add_regions('ColorPick', regions[1:])
+
+            self.view.replace(edit, region, color)
+
+            replaceRegionsRecursion()
+
+        replaceRegionsRecursion() # we change where the text points refer, so we have to replace one, and then refetch the locations
 
 class ColorPickCommand(sublime_plugin.TextCommand):
     def run(self, edit):
@@ -362,31 +393,38 @@ class ColorPickCommand(sublime_plugin.TextCommand):
                 selected = selected[1:]
 
         cp = ColorPicker()
-        color = cp.pick(self.view.window(), selected)
 
-        if color:
-            # Determine user preference for case of letters (default upper)
-            s = sublime.load_settings("ColorPicker.sublime-settings")
-            upper_case = s.get("color_upper_case", True)
-            if upper_case:
-                color = color.upper()
+        regions = []
+        # remember all regions to replace later
+        for region in sel:
+            word = self.view.word(region)
+            # if the selected word is a valid color, remember it
+            if cp.is_valid_hex_color(self.view.substr(word)):
+                # include '#' if present
+                if self.view.substr(word.a - 1) == '#':
+                    word = sublime.Region(word.a - 1, word.b)
+                # remember
+                regions.append(word)
+            # otherwise just remember the selected region
             else:
-                color = color.lower()
+                regions.append(region)
 
-            # replace all regions with color
-            for region in sel:
-                word = self.view.word(region)
-                # if the selected word is a valid color, replace it
-                if cp.is_valid_hex_color(self.view.substr(word)):
-                    # include '#' if present
-                    if self.view.substr(word.a - 1) == '#':
-                        word = sublime.Region(word.a - 1, word.b)
-                    # replace
-                    self.view.replace(edit, word, '#' + color)
-                # otherwise just replace the selected region
+        self.view.erase_regions('ColorPick')
+        self.view.add_regions('ColorPick', regions)
+
+        def worker():
+            color = cp.pick(self.view.window(), selected)
+            if color:
+                # Determine user preference for case of letters (default upper)
+                s = sublime.load_settings("ColorPicker.sublime-settings")
+                upper_case = s.get("color_upper_case", True)
+                if upper_case:
+                    color = color.upper()
                 else:
-                    self.view.replace(edit, region, '#' + color)
+                    color = color.lower()
+                self.view.run_command('color_pick_replace_regions_helper', {'color': '#'+color})
 
+        threading.Thread(target=worker).start()
 
 libdir = os.path.join('ColorPicker', 'lib')
 if sublime.platform() == 'osx':
