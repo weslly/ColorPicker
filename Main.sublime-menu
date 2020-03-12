@@ -1,5 +1,16 @@
 [
     {
+        "caption": "Tools",
+        "mnemonic": "T",
+        "id": "tools",
+        "children": [
+            {
+                "caption": "ColorPicker",
+                "command": "color_pick"
+            }
+        ]
+    },
+    {
         "caption": "Preferences",
         "children": [
             {
