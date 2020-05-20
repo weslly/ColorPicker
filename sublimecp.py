@@ -344,7 +344,7 @@ class ColorPickApiGetColorCommand(sublime_plugin.WindowCommand):
         if default_color is not None:
             if default_color.startswith('#'):
                 default_color = default_color[1:]
-            elif default_color.startsWith('0x'):
+            elif default_color.startswith('0x'):
                 prefix = '0x'
                 default_color = default_color[2:]
         color = ColorPicker().pick(self.window, default_color)
