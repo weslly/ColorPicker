@@ -71,5 +71,5 @@ def open_color_picker_via_wxwidgets():
 
 if Gtk:
     open_color_picker_via_gtk()
-if wx:
+elif wx:
     open_color_picker_via_wxwidgets()
