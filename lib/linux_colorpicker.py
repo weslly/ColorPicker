@@ -7,6 +7,7 @@ Gtk = None
 
 try:
     from gi.repository import Gtk
+    from gi.repository import Gdk
 except ImportError:
     try:
         import gtk as Gtk
