@@ -9,6 +9,7 @@ try:
     import gi
     gi.require_version('Gtk', '3.0')
     from gi.repository import Gtk
+    from gi.repository import Gdk
 except ImportError:
     try:
         import gtk as Gtk
