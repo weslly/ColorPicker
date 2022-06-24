@@ -376,7 +376,6 @@ class ColorPickCommand(sublime_plugin.TextCommand):
             elif selected.startswith('0x'):
                 selected = selected[2:]
                 prefix = '0x'
-            print("AAa: "+ selected)
 
         cp = ColorPicker()
         color = cp.pick(self.view.window(), selected)
