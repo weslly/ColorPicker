@@ -4,10 +4,10 @@ import subprocess
 import os
 from stat import *
 
-sublime_version = 2
+sublime_version = 3
 
-if not sublime.version() or int(sublime.version()) > 3000:
-    sublime_version = 3
+if not sublime.version() or int(sublime.version()) > 4000:
+    sublime_version = 4
 
 if sublime.platform() == 'windows':
 
@@ -362,13 +362,17 @@ class ColorPickApiIsAvailableCommand(sublime_plugin.ApplicationCommand):
 class ColorPickCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         sel = self.view.sel()
+
         selected = None
         prefix = '#'
+        
         # get the currently selected color - if any
         if len(sel) > 0:
             selected = self.view.substr(self.view.word(sel[0])).strip()
             if selected.startswith('#'):
                 selected = selected[1:]
+            elif selected.startswith('\''):
+                selected = selected[2:]
             elif selected.startswith('0x'):
                 selected = selected[2:]
                 prefix = '0x'

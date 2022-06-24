@@ -1,7 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys
-
 wx = None
 Gtk = None
 
@@ -9,6 +8,7 @@ try:
     import gi
     gi.require_version('Gtk', '3.0')
     from gi.repository import Gtk
+    from gi.repository import Gdk
 except ImportError:
     try:
         import gtk as Gtk
@@ -24,7 +24,6 @@ except ImportError:
 
 def open_color_picker_via_gtk():
     color_sel = Gtk.ColorSelectionDialog("Sublime Color Picker")
-
     if len(sys.argv) > 1:
         current_color = Gdk.color_parse(sys.argv[1])
         if current_color:
